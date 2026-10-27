@@ -30,3 +30,4 @@ class InvestigationResult(BaseModel):
     evidence: list[str] = Field(min_length=1)
     recommended_action: RecommendedAction
     requires_human_approval: bool
+    explanation: str | None = Field(default=None, max_length=1000)

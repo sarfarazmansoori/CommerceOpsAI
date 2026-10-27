@@ -1,11 +1,15 @@
 """REST API for CommerceOps AI."""
 
+from pathlib import Path
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 
 from src.models import InvestigationResult
 from src.orchestration.workflow import investigate_order
 
+
+load_dotenv(dotenv_path=Path(__file__).resolve().parents[2] / ".env")
 
 app = FastAPI(
     title="CommerceOps AI",
