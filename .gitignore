@@ -11,7 +11,8 @@ dist/
 build/
 *.egg-info/
 .DS_Store
-terraform/.terraform/
+# Terraform
+**/.terraform/*
 *.tfstate
 *.tfstate.*
 *.tfplan
