@@ -19,9 +19,13 @@ RecommendedAction = Literal[
     "review_order_manually",
 ]
 
+Severity = Literal["low", "medium", "high", "critical"]
+Confidence = Literal["low", "medium", "high"]
+AgentMode = Literal["bedrock", "fallback"]
+
 
 class InvestigationResult(BaseModel):
-    """Validated output of an order investigation."""
+    """Validated investigation result returned by the API."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -30,4 +34,16 @@ class InvestigationResult(BaseModel):
     evidence: list[str] = Field(min_length=1)
     recommended_action: RecommendedAction
     requires_human_approval: bool
+
+    # AI investigation fields
+    agent_mode: AgentMode = "fallback"
+    root_cause: str | None = Field(default=None, max_length=500)
+    severity: Severity | None = None
+    confidence: Confidence | None = None
+    business_impact: str | None = Field(default=None, max_length=500)
+    resolution_plan: list[str] = Field(default_factory=list)
+    tool_calls: list[str] = Field(default_factory=list)
+    token_usage: dict[str, int] = Field(default_factory=dict)
+
+    # Human-readable explanation
     explanation: str | None = Field(default=None, max_length=1000)

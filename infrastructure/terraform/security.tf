@@ -10,7 +10,7 @@ resource "aws_security_group" "api" {
     from_port   = 8000
     to_port     = 8000
     protocol    = "tcp"
-    cidr_blocks = ["223.238.161.238/32"]
+    cidr_blocks = [var.allowed_api_cidr]
   }
 
   # Allow outbound traffic

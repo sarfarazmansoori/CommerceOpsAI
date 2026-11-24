@@ -16,6 +16,8 @@ build/
 *.tfstate
 *.tfstate.*
 *.tfplan
+terraform.tfvars
+*.auto.tfvars
 mlruns/
 
 logs/

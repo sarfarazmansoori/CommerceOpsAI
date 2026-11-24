@@ -1,148 +1,179 @@
-# CommerceOps AI
+# CommerceOpsAI
 
-**An evidence-based e-commerce order investigation API with optional LLM-generated explanations.**
+**An AI-powered e-commerce operations investigation agent built with Amazon Bedrock, Python and FastAPI.**
 
-CommerceOps AI is a portfolio project that investigates common e-commerce order exceptions, evaluates deterministic business rules, recommends the next action, and identifies when human approval is required.
+CommerceOpsAI investigates e-commerce order exceptions using an AI agent, read-only business tools and deterministic policy guardrails. It retrieves order and inventory evidence, identifies likely root causes, assesses severity and business impact, and recommends resolution steps.
 
-The project explores how AI can assist business operations without giving a language model unrestricted control over business decisions.
+The system combines agentic AI reasoning with deterministic validation and human oversight.
 
-## Business Problem
+## 1. Business Problem
 
-E-commerce operations teams routinely investigate:
+E-commerce operations teams regularly investigate:
 - Orders delayed during fulfillment
 - Inventory shortages
 - Shipments with stalled tracking updates
 
-Manual investigation can be repetitive and inconsistent. CommerceOps AI demonstrates a structured workflow for analyzing available evidence and producing consistent recommendations.
+Manual investigation can be repetitive and inconsistent. CommerceOpsAI demonstrates how an AI agent can retrieve relevant operational evidence and produce structured investigations.
 
-## How It Works
+## 2. Key Features
 
-1. Receive an order investigation request through a REST API.
-2. Retrieve order and inventory data from local sample data.
-3. Evaluate the order using deterministic policy rules.
-4. Produce a diagnosis, supporting evidence, recommended action, and human-approval requirement.
-5. Optionally use Amazon Bedrock to explain the result in plain English.
-6. Validate and record the investigation result in a local audit log.
+- Amazon Bedrock Nova Micro integration.
+- Agent-driven read-only tool calling.
+- Order and inventory lookup tools.
+- Root-cause analysis and severity assessment.
+- Business impact and resolution recommendations.
+- Deterministic diagnosis and action validation.
+- Human-approval enforcement.
+- AI and fallback execution modes.
+- Local JSON Lines audit logging.
+- FastAPI REST API and browser dashboard.
+- Docker containerization.
+- Terraform infrastructure configuration.
+- GitHub Actions CI workflow.
 
-## Architecture
+## 3. Architecture
 
 ```text
-API Request
-    |
-    v
-FastAPI + Request Validation
-    |
-    v
-Investigation Orchestration
-    |
-    +--> Order and Inventory Tools
-    |
-    v
-Deterministic Policy Engine
-    |
-    v
-Structured Investigation Result
-    |
-    +--> Optional Amazon Bedrock Explanation
-    |       (explanation only)
-    |
-    v
-Response Validation
-    |
-    v
-Local Audit Log + API Response
+                 Browser Dashboard
+                        |
+                        v
+                  FastAPI API
+                        |
+                        v
+              Investigation Workflow
+                        |
+             +----------+----------+
+             |                     |
+             v                     v
+       Bedrock AI Agent       Policy Engine
+             |                     |
+             v                     |
+       Tool Registry               |
+             |                     |
+       +-----+------+              |
+       |            |              |
+       v            v              |
+    Get Order   Get Inventory      |
+       |            |              |
+       +------+-----+              |
+              |                    |
+              v                    v
+         AI Analysis ------> Validation
+                                  |
+                                  v
+                         Investigation Result
+                                  |
+                       +----------+----------+
+                       |                     |
+                       v                     v
+                  Dashboard             Audit JSONL
 ```
 
-## Key Design Decisions
+The AI agent retrieves operational evidence using allow-listed read-only tools. The deterministic policy engine independently evaluates the same business records.
 
-### Deterministic decision-making
+AI results are accepted only when their diagnosis and recommended action agree with the validated policy outcome. Human-approval requirements cannot be downgraded by the AI.
 
-Business rules determine the diagnosis, recommended action, and approval requirement. The language model is not the decision authority.
+If Bedrock is disabled or its result is unavailable or rejected, the application uses the deterministic fallback.
 
-### Human approval for sensitive actions
+See [Architecture Documentation](docs/ARCHITECTURE.md).
 
-The API recommends actions; it does not automatically issue refunds, cancel orders, or modify inventory.
+## 4. Technology Stack
 
-### Optional generative AI
+| Area | Technologies |
+|---|---|
+| Language | Python 3.12 |
+| API | FastAPI, Uvicorn |
+| Data validation | Pydantic |
+| AI | Amazon Bedrock Runtime, Nova Micro |
+| AWS SDK | Boto3 |
+| Agent tools | Python read-only tool registry |
+| Business logic | Deterministic policy engine |
+| Audit logging | JSON Lines |
+| Frontend | HTML, CSS, JavaScript |
+| Containerization | Docker |
+| Infrastructure as Code | Terraform |
+| CI | GitHub Actions |
+| Testing | pytest |
 
-Amazon Bedrock can provide a plain-English explanation of an existing result. It can be disabled through environment configuration.
+## 5. Sample Investigations
 
-### Auditability
+The project uses synthetic demonstration data.
 
-Investigation results are recorded in a local JSON Lines audit log. The log is intended for development and demonstration, not production-grade audit storage.
+| Order | Scenario | Expected diagnosis |
+|---|---|---|
+| ORD-1001 | Order awaiting fulfillment | order_awaiting_fulfillment |
+| ORD-1002 | Inventory unavailable | inventory_shortage |
+| ORD-1003 | Tracking update stalled | shipment_tracking_stalled |
 
-### Input and output validation
+Example Bedrock investigation:
 
-Pydantic models validate API requests and investigation responses.
+- Order: ORD-1002
+- Diagnosis: inventory shortage
+- Evidence: required quantity 1, available quantity 0
+- Severity: high or medium, as assessed by the model
+- Recommended action: escalate inventory shortage
+- Human approval: required
 
-## Implemented Technology
+Model-generated severity and explanatory text may vary between invocations. The diagnosis and action must pass deterministic validation.
 
-- Python
-- FastAPI
-- Pydantic
-- Amazon Bedrock Runtime (`Converse` API), optional
-- Boto3
-- pytest
-- python-dotenv
-- Git and GitHub
+## 6. Project Structure
 
-## Current Implementation Status
+```text
+CommerceOpsAI/
+├── .github/workflows/ci.yml
+├── infrastructure/terraform/
+├── src/
+│   ├── agents/
+│   │   ├── investigation_agent.py
+│   │   ├── tool_registry.py
+│   │   └── bedrock_explainer.py
+│   ├── api/main.py
+│   ├── audit/logger.py
+│   ├── data/sample_data.py
+│   ├── orchestration/workflow.py
+│   ├── policies/rules.py
+│   ├── tools/order_tools.py
+│   ├── web/index.html
+│   └── models.py
+├── tests/
+├── docs/
+│   └── ARCHITECTURE.md
+├── Dockerfile
+├── .dockerignore
+├── .env.example
+├── .gitignore
+├── requirements.txt
+└── README.md
+```
 
-**Implemented in the local prototype**
-- Order and inventory investigation using sample data
-- Deterministic policy evaluation
-- Structured investigation results
-- Human-approval flags
-- Optional Amazon Bedrock explanations
-- Local JSON Lines audit logging
-- REST API and automated tests
+## 7. Local Setup
 
-**Not yet implemented**
-- AWS Lambda-based deployment
-- DynamoDB or S3 persistence
-- CloudWatch monitoring
-- Docker image and container deployment
-- Terraform-managed infrastructure
-- GitHub Actions CI/CD pipeline
-- Production authentication, authorization, and operational controls
+### Prerequisites
 
-These are potential future extensions, not claims about the current implementation.
+- Python 3.12
+- Git
+- pip
+- AWS CLI and AWS credentials for Bedrock inference
 
-## Prerequisites
-
-- Python 3.11 or later
-- `pip`
-- AWS credentials with appropriate Amazon Bedrock permissions only if testing Bedrock inference
-
-## Local Setup
-
-Clone the repository and enter its directory:
+### Clone and install
 
 ```bash
-git clone <YOUR_GITHUB_REPOSITORY_URL>
+git clone https://github.com/sarfarazmansoori/CommerceOpsAI.git
 cd CommerceOpsAI
-```
 
-Create and activate a virtual environment:
-
-```bash
 python3 -m venv .venv
 source .venv/bin/activate
+
+python -m pip install -r requirements.txt
 ```
 
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-Create your local environment file:
+### Configure environment
 
 ```bash
 cp .env.example .env
 ```
 
-Keep Bedrock disabled for local development by setting:
+For local fallback mode:
 
 ```dotenv
 BEDROCK_ENABLED=false
@@ -150,35 +181,39 @@ AWS_REGION=us-east-1
 BEDROCK_MODEL_ID=
 ```
 
-Start the API:
+### Start the application
 
 ```bash
 uvicorn src.api.main:app --reload
 ```
 
-Open the interactive API documentation at:
+Open the dashboard:
 
-`http://127.0.0.1:8000/docs`
+http://127.0.0.1:8000
 
-Health check:
+API documentation:
+
+http://127.0.0.1:8000/docs
+
+Health endpoint:
 
 ```bash
-curl http://127.0.0.1:8000/health
+curl http://localhost:8000/health
 ```
 
-Example investigation:
+### Run an investigation
 
 ```bash
-curl -X POST http://127.0.0.1:8000/investigations \
+curl -X POST http://localhost:8000/investigations \
   -H "Content-Type: application/json" \
   -d '{"order_id":"ORD-1002"}'
 ```
 
-The sample order IDs are defined in the project's local sample data.
+## 8. Amazon Bedrock Configuration
 
-## Optional Amazon Bedrock Integration
+The application supports Amazon Bedrock Converse API with Nova Micro.
 
-To test generative explanations, configure your local `.env` file with:
+Example configuration:
 
 ```dotenv
 BEDROCK_ENABLED=true
@@ -186,39 +221,148 @@ AWS_REGION=us-east-1
 BEDROCK_MODEL_ID=us.amazon.nova-micro-v1:0
 ```
 
-Use AWS credentials configured through a supported AWS credential provider, and ensure the identity has permission to invoke the selected model.
+The AWS identity must have permission to invoke the selected model.
 
-Bedrock inference can incur charges. Keep it disabled unless you intentionally want to test the integration. Never commit `.env` or AWS credentials.
+The agent uses a bounded tool-calling workflow with:
+- Maximum two tool-selection rounds.
+- A 350-token output cap for tool-selection requests.
+- A 450-token output cap for the final structured response.
+- An allow-list containing only order and inventory lookup tools.
 
-If inference fails, the workflow is designed to retain the deterministic result without an LLM explanation.
+Inference is pay-per-token and can incur AWS charges. Bedrock is disabled by default in `.env.example`.
 
-## Tests
+Never commit AWS credentials or the local `.env` file.
 
-Run the automated test suite:
+## 9. API Endpoints
 
-```bash
-pytest -q
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/` | Dashboard |
+| GET | `/health` | Health check |
+| GET | `/orders` | Sample orders |
+| GET | `/investigations` | Recent audit history |
+| POST | `/investigations` | Investigate an order |
+
+Example POST body:
+
+```json
+{
+  "order_id": "ORD-1002"
+}
 ```
 
-The tests cover the API, data tools, policy workflow, validation, audit logging, and the optional Bedrock explanation component.
+## 10. Docker
 
-## Security and Limitations
+Build:
 
-- Sample orders are for development and demonstration.
-- The local audit log is not a centralized or tamper-resistant audit system.
-- The current prototype does not implement production authentication or authorization.
-- A human-approval flag is a recommendation signal, not a complete approval workflow.
-- No production deployment or automated business transaction execution is claimed.
+```bash
+docker build -t commerceops-ai:local .
+```
 
-## Roadmap
+Run:
 
-1. Strengthen policy and failure-path tests.
-2. Add containerization and automated CI checks.
-3. Define secure, cost-conscious AWS infrastructure using Terraform.
-4. Add managed persistence and operational monitoring where justified.
-5. Evaluate investigation quality and operational metrics.
-6. Implement a controlled human-approval workflow.
+```bash
+docker run -d \
+  --name commerceops-api \
+  -p 8000:8000 \
+  -v "$(pwd)/logs:/app/logs" \
+  commerceops-ai:local
+```
 
-## Project Status
+Check:
 
-Local prototype under active development.
+```bash
+docker ps
+curl http://localhost:8000/health
+```
+
+The Docker image uses a non-root application user and includes a health check. The volume mount preserves local audit records.
+
+Bedrock credentials must be supplied securely at runtime if AI inference is required inside a container. They must never be baked into the image.
+
+## 11. Audit Logging
+
+Investigation events are stored locally in:
+
+```text
+logs/audit.jsonl
+```
+
+Records include:
+- UTC timestamp
+- Order ID
+- Diagnosis and supporting evidence
+- Recommended action
+- Human-approval requirement
+- Agent execution mode
+- AI analysis and resolution plan, when available
+- Read-only tool calls
+- Token usage
+
+The application records fallback and Bedrock investigations distinctly.
+
+## 12. Terraform Infrastructure
+
+Terraform configuration is provided under `infrastructure/terraform/` for a proposed AWS deployment architecture involving networking, IAM, ECR, ECS/Fargate, S3 and CloudWatch.
+
+Validate configuration:
+
+```bash
+cd infrastructure/terraform
+terraform init
+terraform fmt -check
+terraform validate
+```
+
+**Deployment status:** Terraform configuration is provided for infrastructure planning and validation. The project has not been deployed to ECS/Fargate.
+
+Running `terraform apply` can create chargeable AWS resources. Review the configuration and cost estimates before deployment.
+
+## 13. CI and Testing
+
+GitHub Actions workflow:
+
+`.github/workflows/ci.yml`
+
+The workflow runs the automated test suite on configured pushes and pull requests.
+
+Run tests locally:
+
+```bash
+python -m pytest -q
+```
+
+The previous full local test run reported 32 passing tests before the latest token-usage integration changes. Re-run the suite before publishing the final release.
+
+## 14. Security and Limitations
+
+- Only allow-listed read-only business tools are exposed to the AI agent.
+- No automatic refunds, cancellations or order modifications are performed.
+- Deterministic guardrails validate the AI diagnosis and recommended action.
+- Human approval is required where policy or severity demands it.
+- AWS credentials are not stored in the repository.
+- Synthetic sample data is used.
+- Production authentication and authorization are not implemented.
+- The human-approval process is represented by a requirement flag, not a complete approval system.
+- Local JSONL audit logging is not a production tamper-resistant audit service.
+- Production AWS deployment and monitoring have not been verified.
+
+## 15. Project Verification
+
+Verified during development:
+- FastAPI application and dashboard.
+- Sample order and inventory investigations.
+- Dockerized application.
+- Deterministic fallback.
+- Successful live Bedrock Nova Micro investigation.
+- Read-only tool calls to `get_order` and `get_inventory`.
+- Structured AI response and token usage.
+- Local audit logging.
+
+See the architecture document for the execution flow and design constraints.
+
+---
+
+**Project:** CommerceOpsAI
+**Repository:** https://github.com/sarfarazmansoori/CommerceOpsAI
+**Purpose:** AI-assisted e-commerce operations investigation portfolio project.

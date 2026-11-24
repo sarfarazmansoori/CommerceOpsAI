@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101827">
+  <title>CommerceOps AI | Operations Console</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b1220;
+      --panel: #111c2e;
+      --panel-2: #162338;
+      --border: #26364d;
+      --text: #e8eef7;
+      --muted: #91a2b8;
+      --blue: #60a5fa;
+      --green: #34d399;
+      --amber: #fbbf24;
+      --red: #fb7185;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 14px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+    }
+    button, input { font: inherit; }
+    .shell { max-width: 1440px; margin: auto; padding: 28px 32px 48px; }
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 20px; margin-bottom: 30px;
+    }
+    .brand { display: flex; align-items: center; gap: 13px; }
+    .logo {
+      width: 42px; height: 42px; border-radius: 12px;
+      display: grid; place-items: center; background: #1d3b61;
+      color: #93c5fd; font-weight: 800; font-size: 20px;
+    }
+    h1 { font-size: 19px; margin: 0; letter-spacing: -.3px; }
+    .subtitle { color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .health {
+      display: inline-flex; align-items: center; gap: 8px;
+      border: 1px solid var(--border); border-radius: 30px;
+      padding: 7px 12px; color: var(--muted); font-size: 12px;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); }
+    .dot.ok { background: var(--green); }
+    .dot.bad { background: var(--red); }
+    .intro { margin: 0 0 22px; }
+    .intro h2 { font-size: 25px; letter-spacing: -.7px; margin: 0 0 5px; }
+    .intro p { margin: 0; color: var(--muted); }
+    .stats {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 14px; margin-bottom: 22px;
+    }
+    .stat, .panel {
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+    .stat { padding: 17px 19px; }
+    .stat-label { color: var(--muted); font-size: 12px; }
+    .stat-value { font-size: 25px; font-weight: 700; margin-top: 5px; }
+    .stat-note { color: var(--muted); font-size: 11px; margin-top: 2px; }
+    .layout {
+      display: grid; grid-template-columns: minmax(320px, .85fr) minmax(0, 1.5fr);
+      gap: 18px; align-items: start;
+    }
+    .panel { padding: 21px; margin-bottom: 18px; }
+    .panel-head {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; margin-bottom: 16px;
+    }
+    h3 { font-size: 15px; margin: 0; }
+    .eyebrow { color: var(--muted); font-size: 11px; margin-top: 3px; }
+    label { display: block; color: #c2cede; font-size: 12px; margin-bottom: 7px; }
+    .input-row { display: flex; gap: 9px; }
+    input {
+      width: 100%; min-width: 0; border: 1px solid var(--border);
+      background: #0b1525; color: var(--text); padding: 11px 12px;
+      border-radius: 8px; outline: none;
+    }
+    input:focus { border-color: var(--blue); }
+    button {
+      border: 0; border-radius: 8px; padding: 10px 15px;
+      background: #2563eb; color: white; font-weight: 650;
+      cursor: pointer; white-space: nowrap;
+    }
+    button:hover { background: #3478f6; }
+    button:disabled { opacity: .55; cursor: wait; }
+    .samples { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 13px; }
+    .sample {
+      background: var(--panel-2); color: #c4d4e8;
+      border: 1px solid var(--border); padding: 6px 10px;
+      font-size: 11px; font-weight: 600;
+    }
+    .sample:hover { background: #203653; }
+    .hint { color: var(--muted); font-size: 11px; margin: 12px 0 0; }
+    .notice {
+      display: none; padding: 11px 13px; border-radius: 8px;
+      margin-top: 14px; font-size: 12px;
+      background: #3a2029; border: 1px solid #713847; color: #fecdd3;
+    }
+    .notice.show { display: block; }
+    .order-list { display: grid; gap: 9px; }
+    .order {
+      text-align: left; width: 100%; background: var(--panel-2);
+      border: 1px solid var(--border); color: var(--text);
+      padding: 11px 12px; white-space: normal;
+    }
+    .order:hover { border-color: #4775a7; background: #1a2b43; }
+    .order strong { display: block; font-size: 12px; }
+    .order span { display: block; color: var(--muted); font-size: 11px; margin-top: 3px; }
+    .result-empty {
+      min-height: 245px; display: grid; place-items: center;
+      text-align: center; color: var(--muted); padding: 28px;
+    }
+    .empty-icon {
+      width: 46px; height: 46px; border: 1px solid var(--border);
+      border-radius: 13px; display: grid; place-items: center;
+      margin: 0 auto 12px; color: var(--blue); font-size: 20px;
+    }
+    .result-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 15px; }
+    .order-id { color: var(--muted); font-size: 12px; }
+    .diagnosis { font-size: 19px; font-weight: 750; margin-top: 3px; letter-spacing: -.3px; }
+    .pill {
+      display: inline-flex; align-items: center; border-radius: 30px;
+      padding: 5px 9px; font-size: 10px; font-weight: 700;
+      background: #26364d; color: #cbd5e1; white-space: nowrap;
+    }
+    .pill.warning { background: #49391b; color: #fcd34d; }
+    .pill.success { background: #123b32; color: #6ee7b7; }
+    .pill.danger { background: #48232e; color: #fda4af; }
+    .result-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px;
+    }
+    .detail {
+      background: #0d1727; border: 1px solid var(--border);
+      border-radius: 10px; padding: 13px;
+    }
+    .detail.full { grid-column: 1 / -1; }
+    .detail-title {
+      text-transform: uppercase; letter-spacing: .7px;
+      font-size: 10px; font-weight: 750; color: var(--muted); margin-bottom: 9px;
+    }
+    .detail p { margin: 0; font-size: 12px; color: #d6e0ed; }
+    ul.evidence { margin: 0; padding-left: 17px; color: #d6e0ed; font-size: 12px; }
+    ul.evidence li { margin: 4px 0; }
+    .action-name { font-weight: 700; color: #bfdbfe; font-size: 12px; }
+    .approval { margin-top: 7px; font-size: 11px; color: var(--muted); }
+    .history { display: grid; gap: 0; }
+    .history-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; padding: 11px 0; border-top: 1px solid var(--border);
+    }
+    .history-row:first-child { border-top: 0; }
+    .history-id { font-size: 12px; font-weight: 700; }
+    .history-meta { color: var(--muted); font-size: 10px; margin-top: 3px; }
+    .history-empty { color: var(--muted); font-size: 12px; padding: 8px 0; }
+    .footer { color: #71839a; font-size: 11px; text-align: center; margin-top: 12px; }
+    .muted { color: var(--muted); }
+    @media (max-width: 850px) {
+      .layout { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 540px) {
+      .shell { padding: 20px 14px 35px; }
+      header { align-items: flex-start; }
+      .health { font-size: 10px; }
+      .intro h2 { font-size: 21px; }
+      .stats { gap: 9px; }
+      .stat { padding: 13px; }
+      .stat-value { font-size: 21px; }
+      .panel { padding: 16px; }
+      .input-row { flex-direction: column; }
+      .result-grid { grid-template-columns: 1fr; }
+      .detail.full { grid-column: auto; }
+      .result-top { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div class="brand">
+        <div class="logo">C</div>
+        <div>
+          <h1>CommerceOps AI</h1>
+          <div class="subtitle">Order Intelligence &amp; Exception Management</div>
+        </div>
+      </div>
+      <div class="health"><span class="dot" id="healthDot"></span><span id="healthText">Checking API...</span></div>
+    </header>
+
+    <section class="intro">
+      <h2>Operations console</h2>
+      <p>Investigate order exceptions, inspect supporting evidence, and review recommended next steps.</p>
+    </section>
+
+    <section class="stats">
+      <div class="stat">
+        <div class="stat-label">Demo orders available</div>
+        <div class="stat-value" id="orderCount">—</div>
+        <div class="stat-note">Synthetic development dataset</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Investigations recorded</div>
+        <div class="stat-value" id="investigationCount">—</div>
+        <div class="stat-note">Local audit history</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Decision engine</div>
+        <div class="stat-value" style="font-size:19px">Policy-based</div>
+        <div class="stat-note">Bedrock AI investigation with deterministic policy guardrails</div>
+      </div>
+    </section>
+
+    <section class="layout">
+      <div>
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h3>Investigate an order</h3>
+              <div class="eyebrow">Submit an order ID to run the investigation workflow</div>
+            </div>
+          </div>
+          <form id="investigationForm">
+            <label for="orderId">Order ID</label>
+            <div class="input-row">
+              <input id="orderId" name="orderId" placeholder="e.g. ORD-1003" maxlength="50" required>
+              <button id="investigateButton" type="submit">Investigate</button>
+            </div>
+          </form>
+          <div class="samples">
+            <button class="sample" type="button" data-order="ORD-1001">ORD-1001</button>
+            <button class="sample" type="button" data-order="ORD-1002">ORD-1002</button>
+            <button class="sample" type="button" data-order="ORD-1003">ORD-1003</button>
+          </div>
+          <p class="hint">Choose a sample order or enter an ID. Investigations are recorded in the local audit log.</p>
+          <div class="notice" id="errorNotice" role="alert"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h3>Sample order data</h3>
+              <div class="eyebrow">Synthetic records loaded by the backend</div>
+            </div>
+          </div>
+          <div class="order-list" id="orderList">
+            <div class="muted">Loading sample orders...</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h3>Investigation result</h3>
+              <div class="eyebrow">Live response from the CommerceOps API</div>
+            </div>
+            <span class="pill" id="resultStatus">Awaiting input</span>
+          </div>
+          <div id="resultArea" aria-live="polite">
+            <div class="result-empty">
+              <div>
+                <div class="empty-icon">⌕</div>
+                <strong style="color:#cbd5e1">No investigation selected</strong>
+                <p style="font-size:12px;max-width:300px;margin:7px auto 0">Run an investigation to see its diagnosis, evidence, recommended action, and approval requirement.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h3>Recent investigations</h3>
+              <div class="eyebrow">Latest events from the local audit log</div>
+            </div>
+            <button class="sample" type="button" id="refreshHistory">Refresh</button>
+          </div>
+          <div class="history" id="historyList">
+            <div class="history-empty">Loading audit history...</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer">CommerceOps AI · Evidence-based order investigation · Local demonstration environment</div>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    const diagnosisLabels = {
+      shipment_tracking_stalled: "Shipment tracking stalled",
+      inventory_shortage: "Inventory shortage",
+      order_awaiting_fulfillment: "Order awaiting fulfillment",
+      no_known_exception: "No known exception"
+    };
+
+    const actionLabels = {
+      request_carrier_investigation: "Request carrier investigation",
+      escalate_inventory_shortage: "Escalate inventory shortage",
+      check_fulfillment_queue: "Check fulfillment queue",
+      review_order_manually: "Review order manually"
+    };
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      })[char]);
+    }
+
+    function showError(message) {
+      $("errorNotice").textContent = message;
+      $("errorNotice").classList.add("show");
+    }
+
+    function clearError() {
+      $("errorNotice").textContent = "";
+      $("errorNotice").classList.remove("show");
+    }
+
+    function diagnosisClass(diagnosis) {
+      if (diagnosis === "no_known_exception") return "success";
+      if (diagnosis === "order_awaiting_fulfillment") return "warning";
+      return "danger";
+    }
+
+    function renderResult(result) {
+      const approval = result.requires_human_approval;
+      const isBedrock = result.agent_mode === "bedrock";
+      const modeLabel = isBedrock ? "Bedrock AI agent" : "Deterministic fallback";
+      const modeClass = isBedrock ? "success" : "warning";
+
+      $("resultStatus").textContent = "Investigation complete";
+      $("resultStatus").className = "pill " + diagnosisClass(result.diagnosis);
+
+      const evidence = (result.evidence || [])
+        .map(item => `<li>${escapeHtml(item)}</li>`).join("");
+
+      const rootCause = result.root_cause
+        ? `<p>${escapeHtml(result.root_cause)}</p>`
+        : `<p class="muted">No AI-generated root-cause analysis. The deterministic policy result is shown below.</p>`;
+
+      const businessImpact = result.business_impact
+        ? `<p>${escapeHtml(result.business_impact)}</p>`
+        : `<p class="muted">Not generated in fallback mode.</p>`;
+
+      const resolutionPlan = (result.resolution_plan || [])
+        .map(item => `<li>${escapeHtml(item)}</li>`).join("");
+
+      const toolCalls = (result.tool_calls || [])
+        .map(item => `<li>${escapeHtml(item)}</li>`).join("");
+
+      const usage = result.token_usage || {};
+      const tokenDetails = isBedrock
+        ? `<p>Input: ${Number(usage.inputTokens || 0).toLocaleString()} tokens</p>
+           <p>Output: ${Number(usage.outputTokens || 0).toLocaleString()} tokens</p>
+           <p>Total: ${Number(usage.totalTokens || 0).toLocaleString()} tokens</p>`
+        : `<p class="muted">No Bedrock inference was used.</p>`;
+
+      const aiDetails = isBedrock ? `
+        <div class="detail">
+          <div class="detail-title">Severity</div>
+          <p>${escapeHtml(result.severity || "Not specified")}</p>
+        </div>
+        <div class="detail">
+          <div class="detail-title">Confidence</div>
+          <p>${escapeHtml(result.confidence || "Not specified")}</p>
+        </div>
+        <div class="detail full">
+          <div class="detail-title">Business impact</div>
+          ${businessImpact}
+        </div>
+        <div class="detail full">
+          <div class="detail-title">AI resolution plan</div>
+          ${resolutionPlan ? `<ol class="evidence">${resolutionPlan}</ol>` : '<p class="muted">No resolution steps returned.</p>'}
+        </div>
+        <div class="detail">
+          <div class="detail-title">Read-only tools used</div>
+          ${toolCalls ? `<ul class="evidence">${toolCalls}</ul>` : '<p class="muted">No tool calls recorded.</p>'}
+        </div>
+        <div class="detail">
+          <div class="detail-title">Bedrock token usage</div>
+          ${tokenDetails}
+        </div>` : `
+        <div class="detail full">
+          <div class="detail-title">Execution mode</div>
+          <p>Deterministic policy fallback</p>
+          <div class="approval">Bedrock was not used for this investigation. No AI-generated analysis is being claimed.</div>
+        </div>`;
+
+      $("resultArea").innerHTML = `
+        <div class="result-top">
+          <div>
+            <div class="order-id">ORDER ${escapeHtml(result.order_id)}</div>
+            <div class="diagnosis">${escapeHtml(diagnosisLabels[result.diagnosis] || result.diagnosis)}</div>
+          </div>
+          <span class="pill ${approval ? "danger" : "success"}">${approval ? "Human review required" : "No approval required"}</span>
+        </div>
+        <div class="result-grid">
+          <div class="detail full">
+            <div class="detail-title">Investigation mode</div>
+            <span class="pill ${modeClass}">${modeLabel}</span>
+          </div>
+          <div class="detail full">
+            <div class="detail-title">Evidence identified</div>
+            <ul class="evidence">${evidence || '<li>No evidence returned.</li>'}</ul>
+          </div>
+          <div class="detail">
+            <div class="detail-title">Recommended next step</div>
+            <div class="action-name">${escapeHtml(actionLabels[result.recommended_action] || result.recommended_action)}</div>
+            <div class="approval">${approval ? "Requires human approval before action." : "This recommendation does not require human approval."}</div>
+          </div>
+          <div class="detail">
+            <div class="detail-title">Decision authority</div>
+            <p>Deterministic policy engine and validation guardrails</p>
+            <div class="approval">The AI cannot override the validated diagnosis, action mapping or approval requirements.</div>
+          </div>
+          <div class="detail full">
+            <div class="detail-title">Root-cause analysis</div>
+            ${rootCause}
+          </div>
+          ${aiDetails}
+        </div>`;
+    }
+
+    async function checkHealth() {
+      try {
+        const response = await fetch("/health");
+        if (!response.ok) throw new Error("API health check failed");
+        $("healthDot").className = "dot ok";
+        $("healthText").textContent = "API operational";
+      } catch {
+        $("healthDot").className = "dot bad";
+        $("healthText").textContent = "API unavailable";
+      }
+    }
+
+    async function loadOrders() {
+      try {
+        const response = await fetch("/orders");
+        if (!response.ok) throw new Error("Could not load sample orders");
+        const orders = await response.json();
+        $("orderCount").textContent = orders.length;
+        $("orderList").innerHTML = orders.map(order => `
+          <button class="order" type="button" data-order="${escapeHtml(order.order_id)}">
+            <strong>${escapeHtml(order.order_id)} · ${escapeHtml(order.status)}</strong>
+            <span>${escapeHtml(order.customer_issue)}</span>
+          </button>`).join("");
+
+        document.querySelectorAll("[data-order]").forEach(button => {
+          button.addEventListener("click", () => {
+            $("orderId").value = button.dataset.order;
+            $("investigationForm").requestSubmit();
+          });
+        });
+      } catch (error) {
+        $("orderList").innerHTML = `<div class="history-empty">${escapeHtml(error.message)}</div>`;
+      }
+    }
+
+    async function loadHistory() {
+      try {
+        const response = await fetch("/investigations");
+        if (!response.ok) throw new Error("Could not load audit history");
+        const records = await response.json();
+        $("investigationCount").textContent = records.length;
+        if (!records.length) {
+          $("historyList").innerHTML = '<div class="history-empty">No investigations recorded yet. Run one to create the first audit event.</div>';
+          return;
+        }
+        $("historyList").innerHTML = records.map(record => {
+          const date = record.timestamp ? new Date(record.timestamp).toLocaleString() : "Timestamp unavailable";
+          const label = diagnosisLabels[record.diagnosis] || record.diagnosis || "Unknown";
+          return `<div class="history-row">
+            <div>
+              <div class="history-id">${escapeHtml(record.order_id)}</div>
+              <div class="history-meta">${escapeHtml(date)}</div>
+            </div>
+            <span class="pill ${diagnosisClass(record.diagnosis)}">${escapeHtml(label)}</span>
+          </div>`;
+        }).join("");
+      } catch (error) {
+        $("historyList").innerHTML = `<div class="history-empty">${escapeHtml(error.message)}</div>`;
+      }
+    }
+
+    $("investigationForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      clearError();
+      const orderId = $("orderId").value.trim();
+      if (!orderId) return;
+
+      const button = $("investigateButton");
+      button.disabled = true;
+      button.textContent = "Investigating...";
+      $("resultStatus").textContent = "Processing";
+      $("resultStatus").className = "pill warning";
+
+      try {
+        const response = await fetch("/investigations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ order_id: orderId })
+        });
+        const payload = await response.json();
+        if (!response.ok) {
+          throw new Error(payload.detail || `Request failed (${response.status})`);
+        }
+        renderResult(payload);
+        await loadHistory();
+      } catch (error) {
+        $("resultStatus").textContent = "Investigation failed";
+        $("resultStatus").className = "pill danger";
+        showError(error.message);
+      } finally {
+        button.disabled = false;
+        button.textContent = "Investigate";
+      }
+    });
+
+    $("refreshHistory").addEventListener("click", loadHistory);
+
+    checkHealth();
+    loadOrders();
+    loadHistory();
+  </script>
+</body>
+</html>
