@@ -152,8 +152,11 @@
     .history { display: grid; gap: 0; }
     .history-row {
       display: flex; align-items: center; justify-content: space-between;
-      gap: 12px; padding: 11px 0; border-top: 1px solid var(--border);
+      gap: 12px; padding: 11px 10px; border-top: 1px solid var(--border);
+      cursor: pointer; border-radius: 7px; transition: background 0.15s ease;
     }
+    .history-row:hover { background: rgba(148, 163, 184, 0.10); }
+    .history-row:focus-visible { outline: 2px solid #60a5fa; outline-offset: 2px; }
     .history-row:first-child { border-top: 0; }
     .history-id { font-size: 12px; font-weight: 700; }
     .history-meta { color: var(--muted); font-size: 10px; margin-top: 3px; }
@@ -475,17 +478,29 @@
           $("historyList").innerHTML = '<div class="history-empty">No investigations recorded yet. Run one to create the first audit event.</div>';
           return;
         }
-        $("historyList").innerHTML = records.map(record => {
+        $("historyList").innerHTML = records.map((record, index) => {
           const date = record.timestamp ? new Date(record.timestamp).toLocaleString() : "Timestamp unavailable";
           const label = diagnosisLabels[record.diagnosis] || record.diagnosis || "Unknown";
-          return `<div class="history-row">
+          const mode = record.agent_mode === "bedrock" ? "Bedrock AI" : "Fallback";
+          return `<button class="history-row" type="button" data-history-index="${index}" style="width:100%;text-align:left;background:transparent;color:inherit;border-left:0;border-right:0;border-bottom:0;font:inherit">
             <div>
               <div class="history-id">${escapeHtml(record.order_id)}</div>
-              <div class="history-meta">${escapeHtml(date)}</div>
+              <div class="history-meta">${escapeHtml(date)} · ${mode} · View details →</div>
             </div>
             <span class="pill ${diagnosisClass(record.diagnosis)}">${escapeHtml(label)}</span>
-          </div>`;
+          </button>`;
         }).join("");
+
+        $("historyList").querySelectorAll("[data-history-index]").forEach(button => {
+          button.addEventListener("click", () => {
+            const record = records[Number(button.dataset.historyIndex)];
+            if (!record) return;
+            renderResult(record);
+            $("resultStatus").textContent = "Saved investigation · " +
+              (record.timestamp ? new Date(record.timestamp).toLocaleString() : "Timestamp unavailable");
+            $("resultArea").scrollIntoView({ behavior: "smooth", block: "start" });
+          });
+        });
       } catch (error) {
         $("historyList").innerHTML = `<div class="history-empty">${escapeHtml(error.message)}</div>`;
       }
